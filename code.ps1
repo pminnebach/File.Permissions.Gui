@@ -2,6 +2,25 @@
  | Functions
  #---------------#>
 
+function Get-ADGroupMembership {
+    param(
+        [parameter(Mandatory = $true)]
+        [string]$UserPrincipalName
+    )
+
+    process {
+        $Searcher = New-Object -TypeName System.DirectoryServices.DirectorySearcher
+        $Searcher.Filter = "(&(userprincipalname=$UserPrincipalName))"
+        $Searcher.SearchRoot = "LDAP://$env:USERDNSDOMAIN"
+        $DistinguishedName = $Searcher.FindOne().Properties.distinguishedname
+        $Searcher.Filter = "(member:1.2.840.113556.1.4.1941:=$DistinguishedName)"
+        [void]$Searcher.PropertiesToLoad.Add("name")
+
+        $Searcher.FindAll() | ForEach-Object {
+            $PSItem.Properties.name
+        }
+    }
+}
 
 
 
@@ -12,14 +31,14 @@
 
 #region TabItem: Environment
 
-# $WPFComputernameLabel.Content = $env:COMPUTERNAME
-# $WPFPSVersionLabel.Content = $PSVersionTable.PSVersion.ToString()
-# if ($PSVersionTable.PSVersion.Major -eq 5) {
-#     $WPFOSLabel.Content = "Windows"
-# }
-# else {
-#     $WPFOSLabel.Content = $PSVersionTable.OS
-# }
+$WPFComputernameLabel.Content = $env:COMPUTERNAME
+$WPFPSVersionLabel.Content = $PSVersionTable.PSVersion.ToString()
+if ($PSVersionTable.PSVersion.Major -eq 5) {
+    $WPFOSLabel.Content = "Windows"
+}
+else {
+    $WPFOSLabel.Content = $PSVersionTable.OS
+}
 
 # Get-Module -Name Hyper-ConvertImage, Microsoft.Graph.Intune, WindowsAutoPilotIntune, Intune.HV.Tools -ListAvailable | Sort-Object Name | ForEach-Object {
 #     $WPFmoduleGrid.AddChild([pscustomobject]@{
